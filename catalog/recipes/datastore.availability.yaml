@@ -1,0 +1,25 @@
+id: datastore.availability
+category: availability
+applies_to: [datastore]
+source: apm
+status: draft
+summary: Database queries that did not fail, as seen by the services calling the database, divided by all queries.
+good: A database span that APM did not mark as an error.
+valid: Every database span for db_service.
+notes: >-
+  Measures the database from its consumers' side, which is what an SLO should promise.
+  "The cluster is up" is a status check, not an SLO.
+params:
+  db_service:
+    required: true
+    description: The service name APM reports database spans under. Find it on the APM service map.
+    example: incident-dashboard-postgres
+  operation:
+    required: true
+    description: APM operation name for database spans.
+    example: pg.query
+default_mode: events
+modes:
+  events:
+    numerator: "sum:trace.${operation}.hits{service:${db_service},env:${env}}.as_count() - sum:trace.${operation}.errors{service:${db_service},env:${env}}.as_count()"
+    denominator: "sum:trace.${operation}.hits{service:${db_service},env:${env}}.as_count()"

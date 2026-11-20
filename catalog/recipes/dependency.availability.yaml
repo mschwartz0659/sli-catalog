@@ -1,0 +1,32 @@
+id: dependency.availability
+category: availability
+applies_to: [service, job]
+source: convention
+status: draft
+summary: Successful calls to one outbound dependency (API, MCP, vendor), divided by all calls to it.
+good: A call recorded with outcome:success.
+valid: Every call recorded to slo.dependency.calls for this dependency.
+notes: >-
+  Usually tracked for diagnosis rather than promised to anyone. Emit slo.dependency.calls
+  from the adapter that wraps the dependency (see docs/conventions.md).
+params:
+  dependency:
+    required: true
+    description: Name of the dependency, matching the dependency tag you emit.
+    example: jira
+  min_good_ratio:
+    default: 0.99
+    description: Time-slice mode only. A minute counts as good when at least this share of calls succeeded.
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.dependency.calls{service:${service},env:${env},dependency:${dependency},outcome:success}.as_count()"
+    denominator: "sum:slo.dependency.calls{service:${service},env:${env},dependency:${dependency}}.as_count()"
+  time_slice:
+    queries:
+      query1: "sum:slo.dependency.calls{service:${service},env:${env},dependency:${dependency},outcome:success}.as_count()"
+      query2: "sum:slo.dependency.calls{service:${service},env:${env},dependency:${dependency}}.as_count()"
+    formula: "query1 / query2"
+    comparator: ">="
+    threshold: "${min_good_ratio}"
+    interval_seconds: 60

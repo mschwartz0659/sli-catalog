@@ -1,0 +1,14 @@
+# expect: uses ${operation} but does not declare it as a param
+id: undeclared-param
+category: availability
+applies_to: [service]
+source: apm
+status: draft
+summary: Planted defect - a query uses a variable the recipe never declares.
+good: n/a
+valid: n/a
+default_mode: events
+modes:
+  events:
+    numerator: "sum:trace.${operation}.hits{service:${service}}.as_count()"
+    denominator: "sum:trace.${operation}.hits{service:${service}}.as_count()"

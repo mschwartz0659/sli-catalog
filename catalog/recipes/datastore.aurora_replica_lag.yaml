@@ -1,0 +1,29 @@
+id: datastore.aurora_replica_lag
+category: freshness
+applies_to: [datastore]
+source: integration
+status: draft
+summary: Minutes in which Aurora replica lag stayed under the threshold, divided by all minutes.
+good: A minute in which aws.rds.aurora_replica_lag was at or under max_lag_ms.
+valid: Every minute in the window.
+notes: >-
+  No code needed; the metric comes from Datadog's AWS integration and is reported in
+  milliseconds. Metric and tag names are unverified in our org (docs/plan.md, open items).
+params:
+  cluster:
+    required: true
+    description: Aurora DB cluster identifier, as tagged by the AWS integration.
+    example: incident-dashboard-prod
+  max_lag_ms:
+    required: true
+    description: Largest acceptable replica lag, in milliseconds (the metric's own unit).
+    example: 1000
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "max:aws.rds.aurora_replica_lag{dbclusteridentifier:${cluster}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${max_lag_ms}"
+    interval_seconds: 300

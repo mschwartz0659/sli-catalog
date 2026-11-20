@@ -1,0 +1,37 @@
+apiVersion: sli-catalog/v1
+service: example-dashboard
+env: prod
+team: example-team
+tier: 2
+kind: service
+description: Example internal dashboard with a hydrator job. Shows the common case.
+links:
+  runbook: https://example.test/runbooks/example-dashboard
+routing:
+  page: example-team-apps
+alerting: observe
+window: 30d
+slos:
+  - name: api-availability
+    recipe: request.availability
+    target: 99.5
+    mode: time_slice          # low-traffic internal tool
+    params:
+      operation: express.request
+  - name: api-latency
+    recipe: request.latency
+    target: 99.0
+    params:
+      operation: express.request
+      threshold_seconds: 0.8
+  - name: hydrator-freshness
+    recipe: data.freshness
+    target: 99.0
+    params:
+      dataset: example-incidents
+      max_age_seconds: 1800
+  - name: hydrator-runs
+    recipe: job.availability
+    target: 98.0
+    params:
+      job: example-hydrator

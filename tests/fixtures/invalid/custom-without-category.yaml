@@ -1,0 +1,14 @@
+# expect: 'category' is a required property
+apiVersion: sli-catalog/v1
+service: example-api
+env: prod
+team: example-team
+routing:
+  page: example-team-apps
+slos:
+  - name: reconciliation
+    recipe: custom
+    target: 99.9
+    events:
+      numerator: "sum:slo.job.reconciled{service:example-api}.as_count()"
+      denominator: "sum:slo.job.ingested{service:example-api}.as_count()"

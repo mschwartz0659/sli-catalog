@@ -1,0 +1,21 @@
+id: job.availability
+category: availability
+applies_to: [job, service]
+source: convention
+status: draft
+summary: Job runs that succeeded, divided by all job runs that finished.
+good: A run recorded with outcome:success.
+valid: Every run recorded to slo.job.runs for this job.
+notes: >-
+  A run that never starts records nothing, so this recipe cannot see missed runs.
+  Pair it with data.freshness, whose heartbeat monitor catches a job that has stopped.
+params:
+  job:
+    required: true
+    description: Job name, matching the job tag you emit.
+    example: jira-hydrator
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.job.runs{service:${service},env:${env},job:${job},outcome:success}.as_count()"
+    denominator: "sum:slo.job.runs{service:${service},env:${env},job:${job}}.as_count()"

@@ -1,0 +1,11 @@
+# expect: needs param(s) ['operation']
+apiVersion: sli-catalog/v1
+service: example-api
+env: prod
+team: example-team
+routing:
+  page: example-team-apps
+slos:
+  - name: availability
+    recipe: request.availability
+    target: 99.5

@@ -1,0 +1,21 @@
+id: checks.durability
+category: durability
+applies_to: [datastore, storage]
+source: convention
+status: draft
+summary: Durability checks (backup restores, scrubs) that passed, divided by all that were due to run.
+good: A check recorded with outcome:passed.
+valid: Every check recorded, including outcome:failed and outcome:not_performed.
+notes: >-
+  Same metric as checks.correctness; the category differs. A backup that has never been
+  restored is not evidence of durability, so the usual check is a scheduled test restore.
+params:
+  check:
+    required: true
+    description: Name of the check, matching the check tag you emit.
+    example: aurora-restore-test
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.check.results{service:${service},env:${env},check:${check},outcome:passed}.as_count()"
+    denominator: "sum:slo.check.results{service:${service},env:${env},check:${check}}.as_count()"

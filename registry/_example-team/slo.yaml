@@ -1,0 +1,22 @@
+apiVersion: sli-catalog/v1
+service: example-aurora
+env: prod
+team: example-db-team
+tier: 1
+kind: datastore
+description: Example of an infra team in registry mode. Folders starting with "_" are not applied.
+routing:
+  page: example-db-team
+alerting: observe
+slos:
+  - name: replica-lag
+    recipe: datastore.aurora_replica_lag
+    target: 99.5
+    params:
+      cluster: example-cluster
+      max_lag_ms: 1000
+  - name: restore-test
+    recipe: checks.durability
+    target: 99.0
+    params:
+      check: example-restore-test

@@ -1,0 +1,22 @@
+id: checks.correctness
+category: correctness
+applies_to: [service, job, datastore, queue, storage, system]
+source: convention
+status: draft
+summary: Correctness checks that passed, divided by all checks that were due to run.
+good: A check recorded with outcome:passed.
+valid: Every check recorded, including outcome:failed and outcome:not_performed.
+notes: >-
+  You write the check (a reconciliation against the source, a schema validation, a checksum).
+  A check that could not run is recorded as not_performed and counts against you. It is
+  never recorded as passed.
+params:
+  check:
+    required: true
+    description: Name of the check, matching the check tag you emit.
+    example: jira-reconciliation
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.check.results{service:${service},env:${env},check:${check},outcome:passed}.as_count()"
+    denominator: "sum:slo.check.results{service:${service},env:${env},check:${check}}.as_count()"

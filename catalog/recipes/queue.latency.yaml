@@ -1,0 +1,29 @@
+id: queue.latency
+category: latency
+applies_to: [queue, service]
+source: convention
+status: draft
+summary: Minutes in which delivery time (enqueue to delivered) stayed under the threshold, divided by all minutes.
+good: A minute whose chosen percentile of slo.delivery.duration was at or under threshold_seconds.
+valid: Every minute in the window.
+params:
+  destination:
+    required: true
+    description: Name of the queue, topic or downstream, matching the destination tag you emit.
+    example: jsm-outbox
+  threshold_seconds:
+    required: true
+    description: Delivery-time threshold in seconds.
+    example: 300
+  percentile:
+    default: p95
+    description: Which percentile to compare (p50, p75, p90, p95, p99).
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "${percentile}:slo.delivery.duration{service:${service},env:${env},destination:${destination}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${threshold_seconds}"
+    interval_seconds: 60

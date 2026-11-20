@@ -1,0 +1,15 @@
+# expect: has no 'events' mode
+apiVersion: sli-catalog/v1
+service: example-api
+env: prod
+team: example-team
+routing:
+  page: example-team-apps
+slos:
+  - name: latency
+    recipe: request.latency
+    mode: events
+    target: 99.0
+    params:
+      operation: http.request
+      threshold_seconds: 0.5

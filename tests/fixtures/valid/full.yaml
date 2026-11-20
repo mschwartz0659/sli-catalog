@@ -1,0 +1,64 @@
+apiVersion: sli-catalog/v1
+service: example-dashboard
+env: prod
+team: example-team
+tier: 2
+kind: service
+links:
+  runbook: https://example.test/runbooks/example-dashboard
+routing:
+  page: example-team-apps
+  ticket: ["@pagerduty-example-team-low"]
+alerting: live
+window: 30d
+slos:
+  - name: api-availability
+    recipe: request.availability
+    target: 99.5
+    warning: 99.7
+    params:
+      operation: express.request
+  - name: api-availability-quiet-hours
+    recipe: request.availability
+    mode: time_slice
+    target: 99.0
+    alerting: observe
+    params:
+      operation: express.request
+      min_good_ratio: 0.95
+  - name: api-latency
+    recipe: request.latency
+    target: 99.0
+    params:
+      operation: express.request
+      threshold_seconds: 0.8
+  - name: hydrator-freshness
+    recipe: data.freshness
+    target: 99.0
+    params:
+      dataset: example-incidents
+      max_age_seconds: 1800
+  - name: hydrator-runs
+    recipe: job.availability
+    target: 98.0
+    params:
+      job: example-hydrator
+  - name: reconciliation
+    recipe: custom
+    category: correctness
+    target: 99.9
+    alerting: none
+    events:
+      numerator: "sum:slo.job.reconciled{service:example-dashboard,env:prod}.as_count()"
+      denominator: "sum:slo.job.ingested{service:example-dashboard,env:prod}.as_count()"
+  - name: vendor-api-p99
+    recipe: custom
+    category: latency
+    target: 95.0
+    time_slice:
+      queries:
+        query1: "p99:slo.dependency.duration{service:example-dashboard,env:prod,dependency:vendor}"
+      formula: query1
+      comparator: "<="
+      threshold: 3
+      interval_seconds: 300

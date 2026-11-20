@@ -1,0 +1,37 @@
+id: data.freshness
+category: freshness
+applies_to: [job, service, datastore, storage]
+source: convention
+status: draft
+summary: Minutes in which a dataset was younger than the allowed age, divided by all minutes.
+good: A minute in which slo.freshness.age_seconds for the dataset was at or under max_age_seconds.
+valid: Every minute in the window.
+notes: >-
+  Emit slo.freshness.age_seconds from a long-running process (server or worker), computed
+  from your sync-state table, not from the job itself. A job that stops also stops
+  reporting, so this recipe adds a heartbeat monitor that fires when the metric goes silent.
+params:
+  dataset:
+    required: true
+    description: Name of the dataset or job output, matching the dataset tag you emit.
+    example: jira-incidents
+  max_age_seconds:
+    required: true
+    description: Oldest the data may be, in seconds.
+    example: 1800
+  no_data_minutes:
+    default: 30
+    description: Heartbeat fires when the metric has not reported for this many minutes.
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "max:slo.freshness.age_seconds{service:${service},env:${env},dataset:${dataset}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${max_age_seconds}"
+    interval_seconds: 60
+heartbeat:
+  query: "max(last_5m):max:slo.freshness.age_seconds{service:${service},env:${env},dataset:${dataset}} > ${max_age_seconds}"
+  threshold: "${max_age_seconds}"
+  no_data_minutes: "${no_data_minutes}"

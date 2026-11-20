@@ -1,0 +1,11 @@
+# expect: unknown recipe 'request.uptime'
+apiVersion: sli-catalog/v1
+service: example-api
+env: prod
+team: example-team
+routing:
+  page: example-team-apps
+slos:
+  - name: availability
+    recipe: request.uptime
+    target: 99.5

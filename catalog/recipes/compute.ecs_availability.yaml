@@ -1,0 +1,33 @@
+id: compute.ecs_availability
+category: availability
+applies_to: [compute, service]
+source: integration
+status: draft
+summary: Minutes in which an ECS service ran at least its desired task count (times min_ratio), divided by all minutes.
+good: A minute in which running tasks divided by desired tasks was at or above min_ratio.
+valid: Every minute in the window.
+notes: >-
+  No code needed; the metrics come from Datadog's AWS ECS integration. Metric and tag
+  names are unverified in our org (docs/plan.md, open items).
+params:
+  ecs_cluster:
+    required: true
+    description: ECS cluster name, as tagged by the AWS integration.
+    example: internal-apps
+  ecs_service:
+    required: true
+    description: ECS service name, as tagged by the AWS integration.
+    example: incident-dashboard-server
+  min_ratio:
+    default: 1
+    description: Share of desired tasks that must be running for the minute to count as good.
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "min:aws.ecs.service.running{clustername:${ecs_cluster},servicename:${ecs_service}}"
+      query2: "max:aws.ecs.service.desired{clustername:${ecs_cluster},servicename:${ecs_service}}"
+    formula: "query1 / query2"
+    comparator: ">="
+    threshold: "${min_ratio}"
+    interval_seconds: 300

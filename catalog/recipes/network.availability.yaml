@@ -1,0 +1,21 @@
+id: network.availability
+category: availability
+applies_to: [network]
+source: convention
+status: draft
+summary: Network probes that succeeded, divided by all probes sent to a target.
+good: A probe recorded with outcome:success.
+valid: Every probe recorded to slo.probe.results for this target.
+notes: >-
+  Any prober can emit slo.probe.results. Datadog Synthetics network tests are an
+  alternative; a recipe for them is a planned addition once their metric names are verified.
+params:
+  target:
+    required: true
+    description: Name of the probed target, matching the target tag you emit.
+    example: nyc-dc-core
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.probe.results{service:${service},env:${env},target:${target},outcome:success}.as_count()"
+    denominator: "sum:slo.probe.results{service:${service},env:${env},target:${target}}.as_count()"

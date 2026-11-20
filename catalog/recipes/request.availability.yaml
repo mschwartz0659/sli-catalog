@@ -1,0 +1,32 @@
+id: request.availability
+category: availability
+applies_to: [service]
+source: apm
+status: draft
+summary: Requests that did not fail, divided by all requests.
+good: A request that APM did not mark as an error (for web spans, a 5xx).
+valid: Every request APM traced for the operation.
+notes: >-
+  Needs Datadog APM on the service. Use mode time_slice for low-traffic services,
+  where a single bad request would otherwise burn a large share of the budget.
+params:
+  operation:
+    required: true
+    description: APM operation (span) name for incoming requests. Find it on the service's APM page.
+    example: express.request
+  min_good_ratio:
+    default: 0.99
+    description: Time-slice mode only. A minute counts as good when at least this share of requests succeeded.
+default_mode: events
+modes:
+  events:
+    numerator: "sum:trace.${operation}.hits{service:${service},env:${env}}.as_count() - sum:trace.${operation}.errors{service:${service},env:${env}}.as_count()"
+    denominator: "sum:trace.${operation}.hits{service:${service},env:${env}}.as_count()"
+  time_slice:
+    queries:
+      query1: "sum:trace.${operation}.errors{service:${service},env:${env}}.as_count()"
+      query2: "sum:trace.${operation}.hits{service:${service},env:${env}}.as_count()"
+    formula: "1 - query1 / query2"
+    comparator: ">="
+    threshold: "${min_good_ratio}"
+    interval_seconds: 60

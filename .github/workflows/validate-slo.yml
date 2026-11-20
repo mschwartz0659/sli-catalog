@@ -1,0 +1,64 @@
+# Reusable workflow for teams. Add to your repo as .github/workflows/slo.yml:
+#
+#   name: slo
+#   on:
+#     pull_request:
+#       paths: [slo.yaml]
+#   jobs:
+#     validate:
+#       uses: mschwartz0659/sli-catalog/.github/workflows/validate-slo.yml@v0.1.0
+#       with:
+#         catalog-ref: v0.1.0        # keep in step with the module ?ref= in your Terraform
+#       secrets:
+#         catalog-token: ${{ secrets.SLI_CATALOG_READ_TOKEN }}   # only if this repo is private to you
+#
+# This only checks the file and prints what it will create. Your Terraform workspace's own
+# plan is what actually creates the SLOs, and it runs the same checks again.
+
+name: validate-slo
+
+on:
+  workflow_call:
+    inputs:
+      slo-file:
+        description: Path to slo.yaml in the calling repo.
+        type: string
+        default: slo.yaml
+      catalog-ref:
+        description: sli-catalog tag to validate against. Use the same tag as your module source.
+        type: string
+        default: main
+    secrets:
+      catalog-token:
+        description: Read token for sli-catalog, needed only if the calling repo cannot read it.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate slo.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the calling repo
+        uses: actions/checkout@v4
+
+      - name: Check out sli-catalog
+        uses: actions/checkout@v4
+        with:
+          repository: mschwartz0659/sli-catalog
+          ref: ${{ inputs.catalog-ref }}
+          path: .sli-catalog
+          token: ${{ secrets.catalog-token || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r .sli-catalog/scripts/requirements.txt
+
+      - name: Validate and show what will be created
+        env:
+          SLO_FILE: ${{ inputs.slo-file }}
+        run: python3 .sli-catalog/scripts/sli.py validate "$SLO_FILE" --render

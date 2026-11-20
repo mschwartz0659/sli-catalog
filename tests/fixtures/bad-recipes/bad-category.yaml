@@ -1,0 +1,14 @@
+# expect: category 'uptime' is not one of
+id: bad-category
+category: uptime
+applies_to: [service]
+source: apm
+status: draft
+summary: Planted defect - category is not one of the eight SLI types.
+good: n/a
+valid: n/a
+default_mode: events
+modes:
+  events:
+    numerator: "sum:a{service:${service}}.as_count()"
+    denominator: "sum:b{service:${service}}.as_count()"

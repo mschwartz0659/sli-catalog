@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mschwartz0659/sli-catalog/schema/slo.v1.schema.json",
+  "title": "sli-catalog slo.yaml (v1)",
+  "description": "A team's SLO declarations. Each SLO picks a recipe from the catalog (or 'custom') and sets a target.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "service", "env", "team", "routing", "slos"],
+  "properties": {
+    "apiVersion": { "const": "sli-catalog/v1" },
+    "service": { "$ref": "#/$defs/tagValue", "description": "Datadog service tag value. Must match what your telemetry reports." },
+    "env": { "$ref": "#/$defs/tagValue", "description": "Datadog env tag value, e.g. prod." },
+    "team": { "$ref": "#/$defs/tagValue", "description": "Owning team, used as a tag." },
+    "tier": { "type": "integer", "minimum": 1, "maximum": 3, "default": 3 },
+    "kind": {
+      "enum": ["service", "job", "datastore", "queue", "network", "storage", "compute", "system"],
+      "default": "service"
+    },
+    "description": { "type": "string" },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runbook": { "type": "string", "format": "uri" },
+        "repo": { "type": "string", "format": "uri" },
+        "dashboard": { "type": "string", "format": "uri" }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page"],
+      "properties": {
+        "page": {
+          "type": "string",
+          "pattern": "^[^\\s@]+$",
+          "description": "PagerDuty service name exactly as it appears in Datadog's PagerDuty integration (no @pagerduty- prefix)."
+        },
+        "ticket": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^@\\S+$" },
+          "description": "Datadog notification handles for ticket-severity alerts, e.g. @pagerduty-my-team-low. Empty means ticket alerts notify no one."
+        }
+      }
+    },
+    "alerting": { "$ref": "#/$defs/alerting" },
+    "window": { "enum": ["7d", "30d", "90d"], "default": "30d" },
+    "slos": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/slo" }
+    }
+  },
+  "$defs": {
+    "tagValue": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*$" },
+    "alerting": {
+      "enum": ["observe", "live", "none"],
+      "default": "observe",
+      "description": "observe: monitors exist but notify no one. live: page and ticket alerts notify. none: no alert monitors."
+    },
+    "category": {
+      "enum": ["availability", "latency", "quality", "freshness", "correctness", "coverage", "throughput", "durability"]
+    },
+    "paramValue": {
+      "oneOf": [
+        { "type": "number" },
+        { "type": "string", "pattern": "^[A-Za-z0-9._:/-]+$" }
+      ]
+    },
+    "slo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "recipe", "target"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,62}$" },
+        "recipe": { "type": "string", "pattern": "^([a-z0-9_]+\\.[a-z0-9_]+|custom)$" },
+        "target": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 100 },
+        "warning": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 100 },
+        "mode": { "enum": ["events", "time_slice"] },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/paramValue" }
+        },
+        "description": { "type": "string" },
+        "alerting": { "$ref": "#/$defs/alerting" },
+        "category": { "$ref": "#/$defs/category" },
+        "events": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["numerator", "denominator"],
+          "properties": {
+            "numerator": { "type": "string", "minLength": 1 },
+            "denominator": { "type": "string", "minLength": 1 }
+          }
+        },
+        "time_slice": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["queries", "formula", "comparator", "threshold"],
+          "properties": {
+            "queries": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": { "type": "string", "minLength": 1 }
+            },
+            "formula": { "type": "string", "minLength": 1 },
+            "comparator": { "enum": [">", ">=", "<", "<="] },
+            "threshold": { "type": "number" },
+            "interval_seconds": { "enum": [60, 300] }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "recipe": { "const": "custom" } } },
+          "then": {
+            "required": ["category"],
+            "oneOf": [
+              { "required": ["events"], "not": { "required": ["time_slice"] } },
+              { "required": ["time_slice"], "not": { "required": ["events"] } }
+            ],
+            "not": { "required": ["params"] }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["category"] },
+                { "required": ["events"] },
+                { "required": ["time_slice"] }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+id: data.coverage
+category: coverage
+applies_to: [job, service]
+source: convention
+status: draft
+summary: Records processed, divided by records that should have been processed.
+good: Each record counted in slo.coverage.processed.
+valid: Each record counted in slo.coverage.expected.
+notes: >-
+  Count "expected" from the source of truth (for example, the upstream's total), not from
+  what your job happened to fetch, or a partial fetch will look like full coverage.
+params:
+  dataset:
+    required: true
+    description: Name of the dataset, matching the dataset tag you emit.
+    example: jira-incidents
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.coverage.processed{service:${service},env:${env},dataset:${dataset}}.as_count()"
+    denominator: "sum:slo.coverage.expected{service:${service},env:${env},dataset:${dataset}}.as_count()"

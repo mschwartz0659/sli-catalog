@@ -1,0 +1,11 @@
+# expect: 'routing' is a required property
+apiVersion: sli-catalog/v1
+service: example-api
+env: prod
+team: example-team
+slos:
+  - name: availability
+    recipe: request.availability
+    target: 99.5
+    params:
+      operation: http.request

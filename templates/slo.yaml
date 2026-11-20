@@ -1,0 +1,84 @@
+# slo.yaml — starter file. Copy it to the root of your repo, then:
+#   1. Fill in the top section (service, env, team, routing).
+#   2. Delete every SLO below that does not apply to you.
+#   3. Fill in each remaining SLO's params and pick a target.
+#   4. Check it:  python3 path/to/sli-catalog/scripts/sli.py validate slo.yaml --render
+#
+# The full menu is in docs/catalog.md. Units are seconds unless a param name says otherwise.
+# Leave `alerting: observe` for the first two weeks, then set targets from real data and
+# switch to `live` (see the README, "Alerts").
+
+apiVersion: sli-catalog/v1
+
+# --- who and where ------------------------------------------------------------
+service: my-service            # Datadog service tag, exactly as your telemetry reports it
+env: prod                      # Datadog env tag
+team: my-team                  # owning team
+tier: 2                        # 1 = most critical, 3 = least
+kind: service                  # service | job | datastore | queue | network | storage | compute | system
+description: One line on what this is and who relies on it.
+links:
+  runbook: https://example.test/runbooks/my-service
+  repo: https://example.test/my-org/my-service
+
+routing:
+  page: my-team-pagerduty-service   # PagerDuty service name as shown in Datadog's PagerDuty integration
+  ticket: []                        # optional handles for lower-urgency alerts, e.g. ["@pagerduty-my-team-low"]
+
+alerting: observe              # observe | live | none   (observe = alerts exist but notify no one)
+window: 30d                    # 7d | 30d | 90d
+
+# --- SLOs: delete what you do not need ---------------------------------------
+slos:
+  # Requests (needs Datadog APM)
+  - name: api-availability
+    recipe: request.availability
+    target: 99.5
+    params:
+      operation: express.request      # your APM operation name for incoming requests
+    # mode: time_slice                # uncomment for low-traffic services
+
+  - name: api-latency
+    recipe: request.latency
+    target: 99.0
+    params:
+      operation: express.request
+      threshold_seconds: 0.8
+
+  # Scheduled jobs / hydrators (emit slo.job.runs and slo.freshness.age_seconds)
+  - name: hydrator-runs
+    recipe: job.availability
+    target: 98.0
+    params:
+      job: my-hydrator
+
+  - name: hydrator-freshness
+    recipe: data.freshness
+    target: 99.0
+    params:
+      dataset: my-dataset
+      max_age_seconds: 1800
+
+  # Outbound dependencies (emit slo.dependency.calls / slo.dependency.duration)
+  - name: vendor-api-availability
+    recipe: dependency.availability
+    target: 99.0
+    alerting: none                    # often tracked, not alerted on
+    params:
+      dependency: vendor-api
+
+  # Correctness checks you write (emit slo.check.results)
+  - name: reconciliation
+    recipe: checks.correctness
+    target: 99.9
+    params:
+      check: my-reconciliation
+
+  # Anything the menu does not cover: name the category and write the queries yourself.
+  # - name: my-custom-slo
+  #   recipe: custom
+  #   category: quality               # availability | latency | quality | freshness | correctness | coverage | throughput | durability
+  #   target: 99.0
+  #   events:
+  #     numerator: "sum:my.good.metric{service:my-service,env:prod}.as_count()"
+  #     denominator: "sum:my.total.metric{service:my-service,env:prod}.as_count()"

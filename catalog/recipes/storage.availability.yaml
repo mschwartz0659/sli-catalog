@@ -1,0 +1,18 @@
+id: storage.availability
+category: availability
+applies_to: [storage]
+source: convention
+status: draft
+summary: Storage reads and writes that succeeded, divided by all reads and writes.
+good: An operation recorded with outcome:success.
+valid: Every operation recorded to slo.storage.ops for this volume.
+params:
+  volume:
+    required: true
+    description: Name of the volume, bucket or share, matching the volume tag you emit.
+    example: shared-reports
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.storage.ops{service:${service},env:${env},volume:${volume},outcome:success}.as_count()"
+    denominator: "sum:slo.storage.ops{service:${service},env:${env},volume:${volume}}.as_count()"

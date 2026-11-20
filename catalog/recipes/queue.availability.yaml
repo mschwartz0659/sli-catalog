@@ -1,0 +1,18 @@
+id: queue.availability
+category: availability
+applies_to: [queue, service]
+source: convention
+status: draft
+summary: Messages or pushes delivered, divided by all that finished (delivered, failed or dead-lettered).
+good: An event recorded with outcome:delivered.
+valid: Every event recorded to slo.delivery.events for this destination.
+params:
+  destination:
+    required: true
+    description: Name of the queue, topic or downstream, matching the destination tag you emit.
+    example: jsm-outbox
+default_mode: events
+modes:
+  events:
+    numerator: "sum:slo.delivery.events{service:${service},env:${env},destination:${destination},outcome:delivered}.as_count()"
+    denominator: "sum:slo.delivery.events{service:${service},env:${env},destination:${destination}}.as_count()"

@@ -1,0 +1,32 @@
+id: request.latency
+category: latency
+applies_to: [service]
+source: apm
+status: draft
+summary: Minutes in which request latency stayed under the threshold, divided by all minutes.
+good: A minute whose chosen percentile latency was at or under threshold_seconds.
+valid: Every minute in the window.
+notes: >-
+  Time-slice by design: APM latency is a distribution, which gives percentiles per
+  minute rather than a count of requests under a threshold. See docs/decisions.md.
+params:
+  operation:
+    required: true
+    description: APM operation (span) name for incoming requests.
+    example: express.request
+  threshold_seconds:
+    required: true
+    description: Latency threshold in seconds.
+    example: 0.8
+  percentile:
+    default: p95
+    description: Which percentile to compare (p50, p75, p90, p95, p99).
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "${percentile}:trace.${operation}{service:${service},env:${env}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${threshold_seconds}"
+    interval_seconds: 60

@@ -1,0 +1,29 @@
+id: queue.sqs_freshness
+category: freshness
+applies_to: [queue]
+source: integration
+status: draft
+summary: Minutes in which the oldest message in an SQS queue was younger than the allowed age, divided by all minutes.
+good: A minute in which aws.sqs.approximate_age_of_oldest_message was at or under max_age_seconds.
+valid: Every minute in the window.
+notes: >-
+  No code needed; the metric comes from Datadog's AWS integration. Metric and tag names
+  are unverified in our org (docs/plan.md, open items).
+params:
+  queue:
+    required: true
+    description: SQS queue name, as tagged by the AWS integration.
+    example: incident-events
+  max_age_seconds:
+    required: true
+    description: Oldest a waiting message may be, in seconds.
+    example: 300
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "max:aws.sqs.approximate_age_of_oldest_message{queuename:${queue}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${max_age_seconds}"
+    interval_seconds: 300

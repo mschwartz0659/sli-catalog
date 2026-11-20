@@ -1,0 +1,29 @@
+id: network.latency
+category: latency
+applies_to: [network]
+source: convention
+status: draft
+summary: Minutes in which probe round-trip time stayed under the threshold, divided by all minutes.
+good: A minute whose chosen percentile of slo.probe.duration was at or under threshold_seconds.
+valid: Every minute in the window.
+params:
+  target:
+    required: true
+    description: Name of the probed target, matching the target tag you emit.
+    example: nyc-dc-core
+  threshold_seconds:
+    required: true
+    description: Round-trip threshold in seconds.
+    example: 0.01
+  percentile:
+    default: p95
+    description: Which percentile to compare (p50, p75, p90, p95, p99).
+default_mode: time_slice
+modes:
+  time_slice:
+    queries:
+      query1: "${percentile}:slo.probe.duration{service:${service},env:${env},target:${target}}"
+    formula: "query1"
+    comparator: "<="
+    threshold: "${threshold_seconds}"
+    interval_seconds: 60
