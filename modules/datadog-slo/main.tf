@@ -86,6 +86,7 @@ locals {
   slo = { for name, s in local.slos : name => {
     recipe       = s.recipe
     known_recipe = s.recipe == "custom" || contains(keys(local.recipes), s.recipe)
+
     unknown_params = s.recipe == "custom" ? [] : tolist(setsubtract(
       keys(try(s.params, {})), keys(try(local.recipes[s.recipe].params, {}))
     ))
@@ -237,8 +238,8 @@ resource "datadog_service_level_objective" "this" {
 resource "datadog_monitor" "burn_rate" {
   for_each = local.burn_monitors
 
-  name = "[SLO ${upper(each.value.severity)}] ${local.service} - ${each.value.slo}: burning budget ${each.value.rate}x (${each.value.long})"
-  type = "slo alert"
+  name  = "[SLO ${upper(each.value.severity)}] ${local.service} - ${each.value.slo}: burning budget ${each.value.rate}x (${each.value.long})"
+  type  = "slo alert"
   query = format(
     "burn_rate(\"%s\").over(\"%s\").long_window(\"%s\").short_window(\"%s\") > %s",
     datadog_service_level_objective.this[each.value.slo].id,
