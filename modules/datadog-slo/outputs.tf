@@ -24,7 +24,7 @@ output "rendered" {
     numerator   = s.numerator
     denominator = s.denominator
     queries     = s.queries
-    good_when   = s.mode == "time_slice" ? "${s.formula} ${s.comparator} ${s.threshold}" : null
+    good_when   = s.mode == "time_slice" && s.formula != null && s.comparator != null && s.threshold != null ? "${s.formula} ${s.comparator} ${s.threshold}" : null
   } }
 }
 
