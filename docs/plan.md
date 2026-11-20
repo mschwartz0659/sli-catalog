@@ -43,13 +43,13 @@ or tooling. Close one by checking it, then update the recipe/module and add a de
 
 | # | Assumption | Where it matters | How to check |
 |---|---|---|---|
-| U1 | Terraform module plans cleanly (written without a local terraform binary) | everything | P0.6 CI run |
+| U1 | ~~Terraform module plans cleanly~~ Closed 2026-11-19: `terraform test` passes on CI (TF 1.9.8, Datadog provider 4.31.0, mock provider) | everything | Done (PR #1) |
 | U2 | Datadog metric SLO numerators accept `a - b` arithmetic | `request.availability`, `datastore.availability` | Apply in observe (P1.5) |
 | U3 | Time-slice SLOs accept multi-query formulas such as `1 - query1 / query2` | time-slice modes with two queries | Apply in observe |
 | U4 | Burn-rate long window of 24h is allowed; 72h may not be | burn tiers | Datadog docs / apply |
 | U5 | How time-slice SLOs treat minutes with no data | `data.freshness` (heartbeat added as a guard) | Datadog docs / test |
 | U6 | APM trace metric names per tracer (`trace.<op>.hits`, `.errors`, `trace.<op>` distribution with percentiles) | APM recipes | Pilot (P1.3) |
 | U7 | AWS integration names: `aws.rds.aurora_replica_lag` (ms, `dbclusteridentifier`), `aws.sqs.approximate_age_of_oldest_message` (`queuename`), `aws.ecs.service.running/desired` (`clustername`, `servicename`) | integration recipes | Metrics explorer in our org |
-| U8 | Current Datadog provider version supports `sli_specification.time_slice` with our block layout | module | U1 + apply |
+| U8 | Datadog accepts what the module plans (schema-valid on provider 4.31.0; not yet applied to a real org) | module | Apply in observe (P1.5) |
 | U9 | TFE private registry can publish a module from a subdirectory of this repo | module distribution | TFE admin / docs |
 | U10 | Teams' TFE workspaces can fetch this repo over git (VCS credentials) | module source | Pilot |

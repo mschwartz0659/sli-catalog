@@ -44,7 +44,7 @@ jobs:
         with:
           terraform_version: "1.9.8"
       - name: Format
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -diff -recursive
       - name: Module tests (mock provider, no credentials)
         working-directory: modules/datadog-slo
         run: |
