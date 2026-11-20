@@ -42,6 +42,9 @@ run "full_fixture_renders" {
     error_message = "A team param must override the recipe default."
   }
 
+  # Burn-rate queries embed the SLO id, unknown at plan, so tiers are checked
+  # through output.burn_rate_alerts instead of the monitor query.
+
   # reconciliation has alerting: none, so 6 alerting SLOs x 3 tiers.
   assert {
     condition     = length(datadog_monitor.burn_rate) == 18
@@ -49,12 +52,12 @@ run "full_fixture_renders" {
   }
 
   assert {
-    condition     = strcontains(datadog_monitor.burn_rate["api-availability.page_fast"].query, ".long_window(\"1h\").short_window(\"5m\") > 14.40")
+    condition     = output.burn_rate_alerts["api-availability.page_fast"].long == "1h" && output.burn_rate_alerts["api-availability.page_fast"].short == "5m" && output.burn_rate_alerts["api-availability.page_fast"].rate == "14.40"
     error_message = "30d page_fast tier must be 14.4x over 1h/5m."
   }
 
   assert {
-    condition     = strcontains(datadog_monitor.burn_rate["api-availability.ticket"].query, ".long_window(\"24h\").short_window(\"2h\") > 3.00")
+    condition     = output.burn_rate_alerts["api-availability.ticket"].long == "24h" && output.burn_rate_alerts["api-availability.ticket"].short == "2h" && output.burn_rate_alerts["api-availability.ticket"].rate == "3.00"
     error_message = "30d ticket tier must be 3x over 24h/2h."
   }
 

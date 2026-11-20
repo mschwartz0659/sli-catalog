@@ -27,3 +27,14 @@ output "rendered" {
     good_when   = s.mode == "time_slice" ? "${s.formula} ${s.comparator} ${s.threshold}" : null
   } }
 }
+
+output "burn_rate_alerts" {
+  description = "Burn-rate alert settings per <slo>.<tier>: severity, windows, threshold and who is notified."
+  value = { for k, m in local.burn_monitors : k => {
+    severity = m.severity
+    long     = m.long
+    short    = m.short
+    rate     = m.rate
+    alerting = m.alerting
+  } }
+}
