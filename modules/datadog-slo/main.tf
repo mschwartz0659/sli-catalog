@@ -141,8 +141,8 @@ locals {
 resource "datadog_service_level_objective" "this" {
   for_each = local.slo
 
-  name        = "${local.service} - ${each.key}"
-  type        = each.value.mode == "events" ? "metric" : "time_slice"
+  name = "${local.service} - ${each.key}"
+  type = each.value.mode == "events" ? "metric" : "time_slice"
   description = trimspace(join("\n\n", compact([
     each.value.summary,
     each.value.description,
@@ -238,8 +238,8 @@ resource "datadog_service_level_objective" "this" {
 resource "datadog_monitor" "burn_rate" {
   for_each = local.burn_monitors
 
-  name  = "[SLO ${upper(each.value.severity)}] ${local.service} - ${each.value.slo}: burning budget ${each.value.rate}x (${each.value.long})"
-  type  = "slo alert"
+  name = "[SLO ${upper(each.value.severity)}] ${local.service} - ${each.value.slo}: burning budget ${each.value.rate}x (${each.value.long})"
+  type = "slo alert"
   query = format(
     "burn_rate(\"%s\").over(\"%s\").long_window(\"%s\").short_window(\"%s\") > %s",
     datadog_service_level_objective.this[each.value.slo].id,
@@ -271,9 +271,9 @@ resource "datadog_monitor" "burn_rate" {
 resource "datadog_monitor" "heartbeat" {
   for_each = local.heartbeats
 
-  name    = "[SLO HEARTBEAT] ${local.service} - ${each.key}: data is stale or not reporting"
-  type    = "metric alert"
-  query   = each.value.heartbeat_query
+  name  = "[SLO HEARTBEAT] ${local.service} - ${each.key}: data is stale or not reporting"
+  type  = "metric alert"
+  query = each.value.heartbeat_query
   message = trimspace(join("\n", compact([
     "{{#is_alert}}Data for **${each.key}** on **${local.service}** is older than allowed.{{/is_alert}}",
     "{{#is_no_data}}No freshness data for **${each.key}** on **${local.service}** for ${each.value.heartbeat_no_data} minutes. The job or the process reporting it may have stopped.{{/is_no_data}}",
